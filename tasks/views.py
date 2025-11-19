@@ -13,8 +13,8 @@ from django.utils.decorators import method_decorator
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.mixins import PermissionRequiredMixin
 from django.views.generic.base import ContextMixin
-from django.views.generic import ListView, DetailView, UpdateView
-
+from django.views.generic import ListView, DetailView, UpdateView,DeleteView
+from django.urls import reverse_lazy
 
 # Class Based View Re-use example
 
@@ -234,7 +234,7 @@ class UpdateTask(UpdateView):
         return redirect('update-task', self.object.id)
 
 
-@login_required
+"""@login_required
 @permission_required("tasks.delete_task", login_url='no-permission')
 def delete_task(request, id):
     if request.method == 'POST':
@@ -244,8 +244,21 @@ def delete_task(request, id):
         return redirect('manager-dashboard')
     else:
         messages.error(request, 'Something went wrong')
-        return redirect('manager-dashboard')
+        return redirect('manager-dashboard')"""
 
+
+@method_decorator(login_required, name= 'dispatch')
+@method_decorator(permission_required("tasks.delete_task", login_url='no-permission'), name = 'dispatch')
+class TaskDelete(DeleteView):
+    model = Task
+    success_url= reverse_lazy('manager-dashboard')
+
+    def post(self, request, *args, **kwargs):
+        messages.success(request, 'Task Deleted successfully')
+        return super().post(request, *args, **kwargs)
+    def get(self, request, *args, **kwargs):
+        messages.error(request, 'something went wrong')
+        return super().get(request, *args, **kwargs)
 
 @login_required
 @permission_required("tasks.view_task", login_url='no-permission')
